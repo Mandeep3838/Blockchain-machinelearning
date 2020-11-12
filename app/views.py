@@ -1,6 +1,7 @@
 import datetime
 import json
 
+import os
 import requests
 from flask import render_template, redirect, request
 
@@ -8,21 +9,26 @@ from app import app
 
 # The node with which our application interacts, there can be multiple
 # such nodes as well.
-CONNECTED_NODE_ADDRESS = "http://127.0.0.1:8000"
+CONNECTED_NODE_ADDRESS = set()
 
 posts = []
 
+peer = os.environ.get('PEER')
+
+CONNECTED_NODE_ADDRESS.add(peer)
 
 def fetch_posts():
     """
     Function to fetch the chain from a blockchain node, parse the
     data and store it locally.
     """
-    get_chain_address = "{}/chain".format(CONNECTED_NODE_ADDRESS)
+    get_chain_address = "{}/chain".format(list(CONNECTED_NODE_ADDRESS)[0])
     response = requests.get(get_chain_address)
     if response.status_code == 200:
         content = []
         chain = json.loads(response.content)
+        for peer in chain["peers"]:
+            CONNECTED_NODE_ADDRESS.add(peer)
         for block in chain["chain"]:
             for tx in block["transactions"]:
                 tx["index"] = block["index"]
@@ -41,7 +47,7 @@ def index():
                            title='YourNet: Decentralized '
                                  'content sharing',
                            posts=posts,
-                           node_address=CONNECTED_NODE_ADDRESS,
+                           node_address=list(CONNECTED_NODE_ADDRESS)[0],
                            readable_time=timestamp_to_string)
 
 
@@ -58,10 +64,11 @@ def submit_textarea():
         'content': post_content,
     }
 
-    # Submit a transaction
-    new_tx_address = "{}/new_transaction".format(CONNECTED_NODE_ADDRESS)
+    # Submit a transaction to all peers
+    for peer in CONNECTED_NODE_ADDRESS:
+        new_tx_address = "{}/new_transaction".format(peer)
 
-    requests.post(new_tx_address,
+        requests.post(new_tx_address,
                   json=post_object,
                   headers={'Content-type': 'application/json'})
 
@@ -70,3 +77,7 @@ def submit_textarea():
 
 def timestamp_to_string(epoch_time):
     return datetime.datetime.fromtimestamp(epoch_time).strftime('%H:%M')
+
+@app.route('/getpeers', methods=['GET'])
+def get_peers():
+    return json.dumps({"peers": list(CONNECTED_NODE_ADDRESS)})

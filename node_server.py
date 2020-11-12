@@ -62,6 +62,7 @@ class Blockchain:
 
         block.hash = proof
         self.chain.append(block)
+        self.unconfirmed_transactions = []
         return True
 
     @staticmethod
@@ -202,7 +203,7 @@ def register_new_peers():
         return "Invalid data", 400
 
     # Add the node to the peer list
-    peers.add(node_address)
+    peers.add(node_address[:-1])
 
     # Return the consensus blockchain to the newly registered node
     # so that he can sync
@@ -296,7 +297,7 @@ def consensus():
     current_len = len(blockchain.chain)
 
     for node in peers:
-        response = requests.get('{}chain'.format(node))
+        response = requests.get('{}/chain'.format(node))
         length = response.json()['length']
         chain = response.json()['chain']
         if length > current_len and blockchain.check_chain_validity(chain):
@@ -317,7 +318,7 @@ def announce_new_block(block):
     respective chains.
     """
     for peer in peers:
-        url = "{}add_block".format(peer)
+        url = "{}/add_block".format(peer)
         headers = {'Content-Type': "application/json"}
         requests.post(url,
                       data=json.dumps(block.__dict__, sort_keys=True),
