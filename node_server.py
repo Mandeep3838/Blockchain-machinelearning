@@ -1,15 +1,18 @@
 from hashlib import sha256
-import json
+import json, pickle
+import numpy
 import time
 
 from flask import Flask, request
 import requests
+import backprop as bp
 
 
 class Block:
-    def __init__(self, index, transactions, timestamp, previous_hash, nonce=0):
+    def __init__(self, index, wei, b, timestamp, previous_hash, nonce=0):
         self.index = index
-        self.transactions = transactions
+        self.wei = wei
+        self.b = b
         self.timestamp = timestamp
         self.previous_hash = previous_hash
         self.nonce = nonce
@@ -18,6 +21,9 @@ class Block:
         """
         A function that return the hash of the block contents.
         """
+        # temp = self
+        # temp.wei = self.wei.tolist()
+        # temp.b = self.b.tolist()
         block_string = json.dumps(self.__dict__, sort_keys=True)
         return sha256(block_string.encode()).hexdigest()
 
@@ -36,7 +42,16 @@ class Blockchain:
         the chain. The block has index 0, previous_hash as 0, and
         a valid hash.
         """
-        genesis_block = Block(0, [], 0, "0")
+        # description = [{"num_nodes" : 12, "activation" : "relu"},
+        #     #    {"num_nodes" : 12, "activation" : "relu"},
+        #        {"num_nodes" : 1, "activation" : "relu"}]
+        # NN_model = bp.NeuralNetwork(description,12,"mean_squared", None, None, learning_rate=0.001)
+        # wei = []
+        # b = []
+        # for layer in NN_model.layers:
+        #     wei.append(layer.W.tolist())
+        #     b.append(layer.b.tolist())
+        genesis_block = Block(0, 0, 0, 0, "0")
         genesis_block.hash = genesis_block.compute_hash()
         self.chain.append(genesis_block)
 
@@ -122,9 +137,52 @@ class Blockchain:
             return False
 
         last_block = self.last_block
+        last_wei = last_block.W
+        last_b = last_block.b
+        wei = []
+        b = []
+
+        # model averaging
+        if len(self.unconfirmed_transactions) == 1:
+            transaction = self.unconfirmed_transactions[0]
+            wei = transaction["wei"]
+            b = transaction["b"]
+        else:
+            W = []
+            B = []
+            for i in range(len(self.unconfirmed_transactions)):
+                w = []
+                b = []
+                transaction = self.unconfirmed_transactions[i]
+                for wei in transaction["wei"]:
+                    temp_w = numpy.array(wei)
+                    w.append(temp_w)
+                for base in transaction["b"]:
+                    temp_b = numpy.array(base)
+                    b.append(temp_b)
+                W.append(w)
+                B.append(b)
+            
+            temp_wei = numpy.array(W[0])
+            temp_b = numpy.array(B[0])
+            for i in range(1,len(self.unconfirmed_transactions)):
+                temp_wei = temp_wei + numpy.array(W[i])
+                temp_b = temp_b + numpy.array(B[i])
+            temp_wei = temp_wei/len(self.unconfirmed_transactions)
+            temp_b = temp_b/len(self.unconfirmed_transactions)
+            
+            wei = [] # back into list
+            b = []
+            for w in list(temp_wei):
+                wei.append(w.tolist())
+            for j in list(temp_b):
+                b.append(j.tolist())
+
+
 
         new_block = Block(index=last_block.index + 1,
-                          transactions=self.unconfirmed_transactions,
+                          wei=wei,
+                          b=b,
                           timestamp=time.time(),
                           previous_hash=last_block.hash)
 
@@ -151,7 +209,7 @@ peers = set()
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
     tx_data = request.get_json()
-    required_fields = ["author", "content"]
+    required_fields = ["wei", "b"]
 
     for field in required_fields:
         if not tx_data.get(field):
@@ -170,7 +228,7 @@ def new_transaction():
 @app.route('/chain', methods=['GET'])
 def get_chain():
     chain_data = []
-    for block in blockchain.chain:
+    for block in blockchain.chain: 
         chain_data.append(block.__dict__)
     return json.dumps({"length": len(chain_data),
                        "chain": chain_data,
@@ -182,17 +240,19 @@ def get_chain():
 # a command to mine from our application itself.
 @app.route('/mine', methods=['GET'])
 def mine_unconfirmed_transactions():
-    result = blockchain.mine()
-    if not result:
-        return "No transactions to mine"
-    else:
-        # Making sure we have the longest chain before announcing to the network
-        chain_length = len(blockchain.chain)
-        consensus()
-        if chain_length == len(blockchain.chain):
-            # announce the recently mined block to the network
-            announce_new_block(blockchain.last_block)
-        return "Block #{} is mined.".format(blockchain.last_block.index)
+    while(True):
+        result = blockchain.mine()
+        if not result:
+            print("No transactions to mine")
+        else:
+            # Making sure we have the longest chain before announcing to the network
+            chain_length = len(blockchain.chain)
+            consensus()
+            if chain_length == len(blockchain.chain):
+                # announce the recently mined block to the network
+                announce_new_block(blockchain.last_block)
+            print("Block #{} is mined.".format(blockchain.last_block.index))
+        time.sleep(20)
 
 
 # endpoint to add new peers to the network.
@@ -248,7 +308,8 @@ def create_chain_from_dump(chain_dump):
         if idx == 0:
             continue  # skip genesis block
         block = Block(block_data["index"],
-                      block_data["transactions"],
+                      block_data["wei"],
+                      block_data["b"],
                       block_data["timestamp"],
                       block_data["previous_hash"],
                       block_data["nonce"])
@@ -266,7 +327,8 @@ def create_chain_from_dump(chain_dump):
 def verify_and_add_block():
     block_data = request.get_json()
     block = Block(block_data["index"],
-                  block_data["transactions"],
+                  block_data["wei"],
+                  block_data["b"],
                   block_data["timestamp"],
                   block_data["previous_hash"],
                   block_data["nonce"])
