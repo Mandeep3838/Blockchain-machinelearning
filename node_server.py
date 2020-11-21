@@ -1,6 +1,7 @@
 from hashlib import sha256
 import json, pickle
 import numpy
+import random
 import time
 
 from flask import Flask, request
@@ -113,7 +114,7 @@ class Blockchain:
         previous_hash = "0"
 
         for block in chain:
-            block_hash = block.hash
+            block_hash = block["hash"]
             # remove the hash field to recompute the hash again
             # using `compute_hash` method.
             delattr(block, "hash")
@@ -137,8 +138,7 @@ class Blockchain:
             return False
 
         last_block = self.last_block
-        last_wei = last_block.W
-        last_b = last_block.b
+
         wei = []
         b = []
 
@@ -147,6 +147,7 @@ class Blockchain:
             transaction = self.unconfirmed_transactions[0]
             wei = transaction["wei"]
             b = transaction["b"]
+            print("Singly Mined")
         else:
             W = []
             B = []
@@ -177,8 +178,7 @@ class Blockchain:
                 wei.append(w.tolist())
             for j in list(temp_b):
                 b.append(j.tolist())
-
-
+            print("Aggregated and Mined")
 
         new_block = Block(index=last_block.index + 1,
                           wei=wei,
@@ -252,7 +252,7 @@ def mine_unconfirmed_transactions():
                 # announce the recently mined block to the network
                 announce_new_block(blockchain.last_block)
             print("Block #{} is mined.".format(blockchain.last_block.index))
-        time.sleep(20)
+        time.sleep(random.randint(10,20))
 
 
 # endpoint to add new peers to the network.
