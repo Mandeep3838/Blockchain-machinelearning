@@ -164,19 +164,26 @@ class Blockchain:
                 W.append(w)
                 B.append(b)
             
-            temp_wei = numpy.array(W[0])
-            temp_b = numpy.array(B[0])
-            for i in range(1,len(self.unconfirmed_transactions)):
-                temp_wei = temp_wei + numpy.array(W[i])
-                temp_b = temp_b + numpy.array(B[i])
-            temp_wei = temp_wei/len(self.unconfirmed_transactions)
-            temp_b = temp_b/len(self.unconfirmed_transactions)
+            # temp_wei = numpy.array(W[0])
+            # temp_b = numpy.array(B[0])
+            new_w = []
+            new_b = []
+            for i in range(len(W[0])):
+                temp_w = W[0][i]
+                temp_b = B[0][i]
+                for z in range(1,len(W)):
+                    temp_w = temp_w + W[z][i]
+                    temp_b = temp_b + B[z][i]
+                temp_w = temp_w/len(self.unconfirmed_transactions)
+                temp_b = temp_b/len(self.unconfirmed_transactions)
+                new_w.append(temp_w)
+                new_b.append(temp_b)
             
             wei = [] # back into list
             b = []
-            for w in list(temp_wei):
+            for w in new_w:
                 wei.append(w.tolist())
-            for j in list(temp_b):
+            for j in new_b:
                 b.append(j.tolist())
             print("Aggregated and Mined")
 
