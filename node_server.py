@@ -1,6 +1,7 @@
 from hashlib import sha256
 import json, pickle
 import numpy
+import scipy.spatial as sp
 import random
 import time
 
@@ -141,6 +142,7 @@ class Blockchain:
 
         wei = []
         b = []
+        k = 4
 
         # model averaging
         if len(self.unconfirmed_transactions) == 1:
@@ -148,6 +150,67 @@ class Blockchain:
             wei = transaction["wei"]
             b = transaction["b"]
             print("Singly Mined")
+
+        elif len(self.unconfirmed_transactions) > k:
+            # nearest 4 aggregation
+
+            W = []
+            B = []
+            for i in range(len(self.unconfirmed_transactions)):
+                w = []
+                b = []
+                transaction = self.unconfirmed_transactions[i]
+                for wei in transaction["wei"]:
+                    temp_w = numpy.array(wei)
+                    w.append(temp_w)
+                for base in transaction["b"]:
+                    temp_b = numpy.array(base)
+                    b.append(temp_b)
+                W.append(w)
+                B.append(b)
+            # averaging
+            avg_w = []
+            avg_b = []
+            for i in range(len(W[0])):
+                temp_w = W[0][i]
+                temp_b = B[0][i]
+                for z in range(1,len(W)):
+                    temp_w = temp_w + W[z][i]
+                    temp_b = temp_b + B[z][i]
+                temp_w = temp_w/len(self.unconfirmed_transactions)
+                temp_b = temp_b/len(self.unconfirmed_transactions)
+                avg_w.append(temp_w)
+                avg_b.append(temp_b)
+            score = []
+            for z in range(len(W)):
+                sk = 0
+                for i in range(len(W[0])):
+                    sk = sk + (1 - sp.distance.cdist(W[z][i], avg_w[i], 'cosine')).sum()
+                score.append(sk)
+            print("Score of first k ",score)
+            indices = numpy.argsort(-numpy.array(score),kind='mergesort')[:k]
+            # averaging of selected
+            new_w = []
+            new_b = []
+            for i in range(len(W[indices[0]])):
+                temp_w = W[indices[0]][i]
+                temp_b = B[indices[0]][i]
+                for z in range(1,len(indices)):
+                    temp_w = temp_w + W[indices[z]][i]
+                    temp_b = temp_b + B[indices[z]][i]
+                temp_w = temp_w/k
+                temp_b = temp_b/k
+                new_w.append(temp_w)
+                new_b.append(temp_b)
+            
+            wei = [] # back into list
+            b = []
+            for w in new_w:
+                wei.append(w.tolist())
+            for j in new_b:
+                b.append(j.tolist())
+            print("k Aggregated")
+
         else:
             W = []
             B = []
@@ -164,8 +227,6 @@ class Blockchain:
                 W.append(w)
                 B.append(b)
             
-            # temp_wei = numpy.array(W[0])
-            # temp_b = numpy.array(B[0])
             new_w = []
             new_b = []
             for i in range(len(W[0])):
