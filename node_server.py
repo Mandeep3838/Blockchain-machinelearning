@@ -10,7 +10,7 @@ from flask import Flask, request
 import requests
 import backprop as bp
 
-
+ 
 class Block:
     def __init__(self, index, wei, b, timestamp, previous_hash, nonce=0):
         self.index = index
@@ -134,14 +134,16 @@ class Blockchain:
 
         wei = []
         b = []
-        k = 6
+        k = 8
+        aggr = 5
 
         # model averaging
         if len(self.unconfirmed_transactions) == 1:
-            transaction = self.unconfirmed_transactions[0]
-            wei = transaction["wei"]
-            b = transaction["b"]
-            print("Singly Mined")
+            # transaction = self.unconfirmed_transactions[0]
+            # wei = transaction["wei"]
+            # b = transaction["b"]
+            # print("Singly Mined")
+            return False
 
         elif len(self.unconfirmed_transactions) > k:
             # nearest 4 aggregation
@@ -164,11 +166,11 @@ class Blockchain:
             avg_w = []
             avg_b = []
             for i in range(len(W[0])):
-                temp_w = W[0][i]
-                temp_b = B[0][i]
+                temp_w = W[0][i]/numpy.linalg.norm(W[0][i])       # normalized
+                temp_b = B[0][i]/numpy.linalg.norm(B[0][i])       # normalized
                 for z in range(1,len(W)):
-                    temp_w = temp_w + W[z][i]
-                    temp_b = temp_b + B[z][i]
+                    temp_w = temp_w + W[z][i]/numpy.linalg.norm(W[z][i])           
+                    temp_b = temp_b + B[z][i]/numpy.linalg.norm(B[z][i])
                 temp_w = temp_w/len(self.unconfirmed_transactions)
                 temp_b = temp_b/len(self.unconfirmed_transactions)
                 avg_w.append(temp_w)
@@ -177,10 +179,10 @@ class Blockchain:
             for z in range(len(W)):
                 sk = 0
                 for i in range(len(W[0])):
-                    sk = sk + (1 - sp.distance.cdist(W[z][i], avg_w[i], 'cosine')).sum()
+                    sk = sk + (1 - sp.distance.cdist(W[z][i]/numpy.linalg.norm(W[z][i]), avg_w[i], 'cosine')).sum()
                 score.append(sk)
             print("Score of first k ",score)
-            indices = numpy.argsort(-numpy.array(score),kind='mergesort')[:k]
+            indices = numpy.argsort(-numpy.array(score),kind='mergesort')[:aggr]
             # averaging of selected
             new_w = []
             new_b = []
@@ -203,42 +205,44 @@ class Blockchain:
                 b.append(j.tolist())
             print("k Aggregated")
 
+        # else: # averaging of all
+        #     W = []
+        #     B = []
+        #     for i in range(len(self.unconfirmed_transactions)):
+        #         w = []
+        #         b = []
+        #         transaction = self.unconfirmed_transactions[i]
+        #         for wei in transaction["wei"]:
+        #             temp_w = numpy.array(wei)
+        #             w.append(temp_w)
+        #         for base in transaction["b"]:
+        #             temp_b = numpy.array(base)
+        #             b.append(temp_b)
+        #         W.append(w)
+        #         B.append(b)
+            
+        #     new_w = []
+        #     new_b = []
+        #     for i in range(len(W[0])):
+        #         temp_w = W[0][i]
+        #         temp_b = B[0][i]
+        #         for z in range(1,len(W)):
+        #             temp_w = temp_w + W[z][i]
+        #             temp_b = temp_b + B[z][i]
+        #         temp_w = temp_w/len(self.unconfirmed_transactions)
+        #         temp_b = temp_b/len(self.unconfirmed_transactions)
+        #         new_w.append(temp_w)
+        #         new_b.append(temp_b)
+            
+        #     wei = [] # back into list
+        #     b = []
+        #     for w in new_w:
+        #         wei.append(w.tolist())
+        #     for j in new_b:
+        #         b.append(j.tolist())
+        #     print("Aggregated and Mined")
         else:
-            W = []
-            B = []
-            for i in range(len(self.unconfirmed_transactions)):
-                w = []
-                b = []
-                transaction = self.unconfirmed_transactions[i]
-                for wei in transaction["wei"]:
-                    temp_w = numpy.array(wei)
-                    w.append(temp_w)
-                for base in transaction["b"]:
-                    temp_b = numpy.array(base)
-                    b.append(temp_b)
-                W.append(w)
-                B.append(b)
-            
-            new_w = []
-            new_b = []
-            for i in range(len(W[0])):
-                temp_w = W[0][i]
-                temp_b = B[0][i]
-                for z in range(1,len(W)):
-                    temp_w = temp_w + W[z][i]
-                    temp_b = temp_b + B[z][i]
-                temp_w = temp_w/len(self.unconfirmed_transactions)
-                temp_b = temp_b/len(self.unconfirmed_transactions)
-                new_w.append(temp_w)
-                new_b.append(temp_b)
-            
-            wei = [] # back into list
-            b = []
-            for w in new_w:
-                wei.append(w.tolist())
-            for j in new_b:
-                b.append(j.tolist())
-            print("Aggregated and Mined")
+            return False    # less than k transactions
 
         new_block = Block(index=last_block.index + 1,
                           wei=wei,
@@ -302,7 +306,7 @@ def mine_unconfirmed_transactions():
     while(True):
         result = blockchain.mine()
         if not result:
-            print("No transactions to mine")
+            print("No transactions to mine or Less than k transactions")
         else:
             # Making sure we have the longest chain before announcing to the network
             chain_length = len(blockchain.chain)

@@ -16,32 +16,25 @@ from app import app
 CONNECTED_NODE_ADDRESS = set()
 
 posts = []
-
+noise = 0
 
 peer = os.environ.get('PEER')
 start_ind = int(os.environ.get('START_IND'))
 end_ind = int(os.environ.get('END_IND'))
+noise = bool(int(os.environ.get('NOISE')))
 
 # import dataset
 df = pandas.read_csv("data.csv")
 data = df[start_ind:end_ind]
-data_full = df[1100:]
 
 X = data.drop('charges', axis=1)
 y = numpy.array(data['charges'])
 y = y.reshape((len(y), 1))
 
-X_full = data_full.drop('charges', axis=1)
-y_full = numpy.array(data_full['charges'])
-y_full = y_full.reshape((len(y_full), 1))
-
 # Preparing the NumPy array of the inputs.
 
 data_inputs = numpy.array(X).T
 data_outputs = numpy.array(y).T
-
-data_inputs_full = numpy.array(X_full).T
-data_outputs_full = numpy.array(y_full).T
 
 mean = numpy.mean(data_inputs, axis = 1, keepdims=True)
 std_dev = numpy.std(data_inputs, axis = 1, keepdims=True)
@@ -51,15 +44,6 @@ for i in range(data_inputs.shape[0]):
         data_inputs[i] = (data_inputs[i] - mean[i])/std_dev[i]
     else:
         data_inputs[i] = data_inputs[i] - mean[i]
-
-mean_full = numpy.mean(data_inputs_full, axis=1, keepdims=True)
-std_dev_full = numpy.std(data_inputs_full, axis=1, keepdims=True)
-
-for i in range(data_inputs_full.shape[0]):
-    if std_dev_full[i] != 0:
-        data_inputs_full[i] = (data_inputs_full[i] - mean_full[i])/std_dev_full[i]
-    else:
-        data_inputs_full[i] = data_inputs_full[i] - mean_full[i]
 
 num_inputs = 12
 
@@ -99,11 +83,6 @@ def fetch_posts():
         
         NN_model.forward_pass()
         error = NN_model.calc_accuracy(data_inputs, data_outputs, "RMSE")
-        # write to file
-        f = open("error_file.csv","a")
-        error_full = NN_model.calc_accuracy(data_inputs_full, data_outputs_full, "RMSE")
-        f.write(str(last_block["index"]) + "," + str(error_full) + '\n')
-        f.close()
         content["error"] = error
         content["index"] = last_block["index"]
         content["timestamp"] = last_block["timestamp"]
@@ -139,15 +118,19 @@ def submit_textarea():
     Endpoint to create a new transaction via our application.
     """
     global NN_model,CONNECTED_NODE_ADDRESS
-    # post_content = request.form["content"]
-    # author = request.form["author"]
     while(True):
         NN_model.train(100)
         wei = []
         b = []
         for i in range(len(NN_model.layers)):
-            wei.append(NN_model.layers[i].W.tolist())
-            b.append(NN_model.layers[i].b.tolist())
+            if noise:
+                print("Noise added")
+                wei.append((NN_model.layers[i].W + numpy.random.normal(0,1, NN_model.layers[i].W.shape)).tolist())
+                b.append(NN_model.layers[i].b.tolist())
+            else:
+                print("NO noise")
+                wei.append(NN_model.layers[i].W.tolist())
+                b.append(NN_model.layers[i].b.tolist())
         post_object = {
             'wei': wei,
             'b': b,
