@@ -1,6 +1,7 @@
 from hashlib import sha256
 import json, pickle
 import numpy
+import pandas
 import scipy.spatial as sp
 import random
 import time
@@ -44,15 +45,6 @@ class Blockchain:
         the chain. The block has index 0, previous_hash as 0, and
         a valid hash.
         """
-        # description = [{"num_nodes" : 12, "activation" : "relu"},
-        #     #    {"num_nodes" : 12, "activation" : "relu"},
-        #        {"num_nodes" : 1, "activation" : "relu"}]
-        # NN_model = bp.NeuralNetwork(description,12,"mean_squared", None, None, learning_rate=0.001)
-        # wei = []
-        # b = []
-        # for layer in NN_model.layers:
-        #     wei.append(layer.W.tolist())
-        #     b.append(layer.b.tolist())
         genesis_block = Block(0, 0, 0, 0, "0")
         genesis_block.hash = genesis_block.compute_hash()
         self.chain.append(genesis_block)
@@ -142,7 +134,7 @@ class Blockchain:
 
         wei = []
         b = []
-        k = 4
+        k = 6
 
         # model averaging
         if len(self.unconfirmed_transactions) == 1:
@@ -270,7 +262,6 @@ blockchain.create_genesis_block()
 
 # the address to other participating members of the network
 peers = set()
-
 
 # endpoint to submit a new transaction. This will be used by
 # our application to add new data (posts) to the blockchain
@@ -415,7 +406,6 @@ def verify_and_add_block():
 def get_pending_tx():
     return json.dumps(blockchain.unconfirmed_transactions)
 
-
 def consensus():
     """
     Our naive consnsus algorithm. If a longer valid chain is
@@ -425,14 +415,14 @@ def consensus():
 
     longest_chain = None
     current_len = len(blockchain.chain)
-
     for node in peers:
-        response = requests.get('{}/chain'.format(node))
-        length = response.json()['length']
-        chain = response.json()['chain']
-        if length > current_len and blockchain.check_chain_validity(chain):
-            current_len = length
-            longest_chain = chain
+        if node != str(request.host_url)[:-1]:
+            response = requests.get('{}/chain'.format(node))
+            length = response.json()['length']
+            chain = response.json()['chain']
+            if length > current_len and blockchain.check_chain_validity(chain):
+                current_len = length
+                longest_chain = chain
 
     if longest_chain:
         blockchain = longest_chain
@@ -448,11 +438,12 @@ def announce_new_block(block):
     respective chains.
     """
     for peer in peers:
-        url = "{}/add_block".format(peer)
-        headers = {'Content-Type': "application/json"}
-        requests.post(url,
-                      data=json.dumps(block.__dict__, sort_keys=True),
-                      headers=headers)
+        if peer != str(request.host_url)[:-1]:
+            url = "{}/add_block".format(peer)
+            headers = {'Content-Type': "application/json"}
+            requests.post(url,
+                        data=json.dumps(block.__dict__, sort_keys=True),
+                        headers=headers)
 
 # Uncomment this line if you want to specify the port number in the code
 #app.run(debug=True, port=8000)

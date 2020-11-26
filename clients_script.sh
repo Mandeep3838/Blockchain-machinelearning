@@ -79,17 +79,3 @@ export END_IND=1100
 export FLASK_APP=run_app.py
 flask run --port 5010 &
 sleep 5
-
-export PEER="http://127.0.0.1:8001"
-export START_IND=1100
-export END_IND=1200
-export FLASK_APP=run_app.py
-flask run --port 5011 &
-sleep 5
-
-export PEER="http://127.0.0.1:8000"
-export START_IND=1200
-export END_IND=1300
-export FLASK_APP=run_app.py
-flask run --port 5012 &
-echo "Done Model Init"

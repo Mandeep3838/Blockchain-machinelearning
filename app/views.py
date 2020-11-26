@@ -25,22 +25,42 @@ end_ind = int(os.environ.get('END_IND'))
 # import dataset
 df = pandas.read_csv("data.csv")
 data = df[start_ind:end_ind]
+data_full = df[1100:]
 
 X = data.drop('charges', axis=1)
-y = data['charges']
-y = numpy.array(y)
+y = numpy.array(data['charges'])
 y = y.reshape((len(y), 1))
 
-# Preparing the NumPy array of the inputs.
-data_inputs = numpy.array(X)
-data_outputs = numpy.array(y)
+X_full = data_full.drop('charges', axis=1)
+y_full = numpy.array(data_full['charges'])
+y_full = y_full.reshape((len(y_full), 1))
 
-data_inputs = data_inputs.T
-data_outputs = data_outputs.T
+# Preparing the NumPy array of the inputs.
+
+data_inputs = numpy.array(X).T
+data_outputs = numpy.array(y).T
+
+data_inputs_full = numpy.array(X_full).T
+data_outputs_full = numpy.array(y_full).T
 
 mean = numpy.mean(data_inputs, axis = 1, keepdims=True)
 std_dev = numpy.std(data_inputs, axis = 1, keepdims=True)
-data_inputs = (data_inputs - mean)/std_dev
+
+for i in range(data_inputs.shape[0]):
+    if std_dev[i] != 0:
+        data_inputs[i] = (data_inputs[i] - mean[i])/std_dev[i]
+    else:
+        data_inputs[i] = data_inputs[i] - mean[i]
+
+mean_full = numpy.mean(data_inputs_full, axis=1, keepdims=True)
+std_dev_full = numpy.std(data_inputs_full, axis=1, keepdims=True)
+
+for i in range(data_inputs_full.shape[0]):
+    if std_dev_full[i] != 0:
+        data_inputs_full[i] = (data_inputs_full[i] - mean_full[i])/std_dev_full[i]
+    else:
+        data_inputs_full[i] = data_inputs_full[i] - mean_full[i]
+
 num_inputs = 12
 
 description = [{"num_nodes" : 12, "activation" : "relu"},
@@ -79,6 +99,11 @@ def fetch_posts():
         
         NN_model.forward_pass()
         error = NN_model.calc_accuracy(data_inputs, data_outputs, "RMSE")
+        # write to file
+        f = open("error_file.csv","a")
+        error_full = NN_model.calc_accuracy(data_inputs_full, data_outputs_full, "RMSE")
+        f.write(str(last_block["index"]) + "," + str(error_full) + '\n')
+        f.close()
         content["error"] = error
         content["index"] = last_block["index"]
         content["timestamp"] = last_block["timestamp"]
@@ -89,6 +114,9 @@ def fetch_posts():
                 found = True
         if(not found):
             posts.append(content)
+            f = open(str(request.host_url)[-5:-1] + "_error", "a")
+            f.write(str(content["index"]) + "," + str(content["error"]) + "\n")
+            f.close()
         posts = sorted(posts, key=lambda k: k['timestamp'],
                        reverse=True)
 
@@ -114,7 +142,7 @@ def submit_textarea():
     # post_content = request.form["content"]
     # author = request.form["author"]
     while(True):
-        NN_model.train(1000)
+        NN_model.train(100)
         wei = []
         b = []
         for i in range(len(NN_model.layers)):
