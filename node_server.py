@@ -146,7 +146,7 @@ class Blockchain:
             return False
 
         elif len(self.unconfirmed_transactions) > k:
-            # nearest 4 aggregation
+            # nearest aggr aggregation
 
             W = []
             B = []
@@ -181,8 +181,8 @@ class Blockchain:
                 for i in range(len(W[0])):
                     sk = sk + (1 - sp.distance.cdist(W[z][i]/numpy.linalg.norm(W[z][i]), avg_w[i], 'cosine')).sum()
                 score.append(sk)
-            print("Score of first k ",score)
             indices = numpy.argsort(-numpy.array(score),kind='mergesort')[:aggr]
+            print("Score of k ",score)
             # averaging of selected
             new_w = []
             new_b = []
@@ -192,8 +192,8 @@ class Blockchain:
                 for z in range(1,len(indices)):
                     temp_w = temp_w + W[indices[z]][i]
                     temp_b = temp_b + B[indices[z]][i]
-                temp_w = temp_w/k
-                temp_b = temp_b/k
+                temp_w = temp_w/aggr
+                temp_b = temp_b/aggr
                 new_w.append(temp_w)
                 new_b.append(temp_b)
             
@@ -203,7 +203,7 @@ class Blockchain:
                 wei.append(w.tolist())
             for j in new_b:
                 b.append(j.tolist())
-            print("k Aggregated")
+            print("aggr Aggregated")
 
         # else: # averaging of all
         #     W = []
@@ -240,7 +240,7 @@ class Blockchain:
         #         wei.append(w.tolist())
         #     for j in new_b:
         #         b.append(j.tolist())
-        #     print("Aggregated and Mined")
+            # print("Aggregated and Mined")
         else:
             return False    # less than k transactions
 
