@@ -1,4 +1,6 @@
 ''' Miners Script '''
 export FLASK_APP=node_server.py
-flask run --port 8000 &
-flask run --port 8001 &
+for x in {8000..8007}
+do
+    flask run --port $x &
+done

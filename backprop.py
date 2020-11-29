@@ -114,11 +114,14 @@ class NeuralNetwork():
         
         if error_func == "MSE":
             # return np.sqrt(np.sum(y_hat-self.labels))/self.labels.shape[1]
-            return np.sum((self.labels - y_hat)**2 ).squeeze() / (y_hat.shape[1]*2)
+            return np.sum((self.labels - y_hat)**2).squeeze() / (y_hat.shape[1]*2)
         elif error_func == "MAE":
             return np.sum(np.abs(y_hat-self.labels))/self.labels.shape[1]
         elif error_func == "RMSE":
             return np.sqrt(np.sum((self.labels - y_hat)**2 ).squeeze() / (y_hat.shape[1]*2))
+        elif error_func == "missclassification":
+            y_pred = np.round(y_hat)
+            return (y_pred == self.labels).mean()
         else:
             y_pred = np.where(y_hat > 0.5, 1, 0)
             return (y_pred == self.labels).mean()     
@@ -168,7 +171,7 @@ class NeuralNetwork():
             cost = self.calc_J(self.layers[-1].a)
             history.append(cost)
             # if i % 50 == 0:
-            #     print ("Cost after iteration %i: %f" %(i, cost))        
+            #     print ("Cost after iteration %i: %f" %(i, cost.sum()))        
             self.backward_pass()
             self.learn()
         

@@ -18,6 +18,7 @@ CONNECTED_NODE_ADDRESS = set()
 
 posts = []
 peer = os.environ.get('PEER')
+file_name = os.environ.get('ERROR_FILE')
 
 # Test Dataset
 df = pandas.read_csv("data.csv")
@@ -86,7 +87,7 @@ def fetch_posts():
         if(not found):
             posts.append(content)
             # write to file
-            f = open("error_file.csv","a")
+            f = open("error_file" + str(file_name) + ".csv","a")
             f.write(str(last_block["index"]) + "," + str(error_full) + '\n')
             f.close()
         posts = sorted(posts, key=lambda k: k['timestamp'],

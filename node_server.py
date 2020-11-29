@@ -134,8 +134,8 @@ class Blockchain:
 
         wei = []
         b = []
-        k = 8
-        aggr = 5
+        k = 35
+        aggr = 22
 
         # model averaging
         if len(self.unconfirmed_transactions) == 1:
