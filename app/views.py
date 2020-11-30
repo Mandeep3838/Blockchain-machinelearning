@@ -125,7 +125,7 @@ def submit_textarea():
         for i in range(len(NN_model.layers)):
             if noise:
                 print("Noise added")
-                wei.append((NN_model.layers[i].W + numpy.random.normal(0,3, NN_model.layers[i].W.shape)).tolist())
+                wei.append((NN_model.layers[i].W + numpy.random.normal(0, 10, NN_model.layers[i].W.shape)).tolist())
                 b.append(NN_model.layers[i].b.tolist())
             else:
                 print("NO noise")

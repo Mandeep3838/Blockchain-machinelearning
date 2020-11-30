@@ -2,37 +2,37 @@ curl -X POST http://127.0.0.1:8000/register_with -H 'Content-Type: application/j
 
 curl -X POST http://127.0.0.1:8001/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8002/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8002/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8003/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8003/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8004/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8004/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8005/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8005/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8006/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8006/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8007/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8007/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8001/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8001/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8002/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8002/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8003/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8003/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8004/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8004/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8005/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8005/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
-curl -X POST http://127.0.0.1:8006/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
+# curl -X POST http://127.0.0.1:8006/register_with -H 'Content-Type: application/json' -d '{"node_address": "http://127.0.0.1:8000"}'
 
 start=0
-end=25
+end=100
 z=0
-peers=(http://127.0.0.1:8000 http://127.0.0.1:8001 http://127.0.0.1:8002 http://127.0.0.1:8003 http://127.0.0.1:8004 http://127.0.0.1:8005 http://127.0.0.1:8006 http://127.0.0.1:8007)
+# peers=(http://127.0.0.1:8000 http://127.0.0.1:8001 http://127.0.0.1:8002 http://127.0.0.1:8003 http://127.0.0.1:8004 http://127.0.0.1:8005 http://127.0.0.1:8006 http://127.0.0.1:8007)
+peers=(http://127.0.0.1:8000 http://127.0.0.1:8001)
 
-
-for x in {5000..5043}
+for x in {5000..5010}
 do
     export PEER=${peers[$RANDOM % ${#peers[@]}]}
     export START_IND=$start

@@ -3,6 +3,7 @@ import json, pickle
 import numpy
 import pandas
 import scipy.spatial as sp
+from scipy.cluster.vq import kmeans, vq
 import random
 import time
 
@@ -134,8 +135,8 @@ class Blockchain:
 
         wei = []
         b = []
-        k = 35
-        aggr = 22
+        k = 8
+        aggr = 5
 
         # model averaging
         if len(self.unconfirmed_transactions) == 1:
@@ -149,19 +150,40 @@ class Blockchain:
             # nearest aggr aggregation
 
             W = []
+            W_sum = []
             B = []
             for i in range(len(self.unconfirmed_transactions)):
                 w = []
                 b = []
+                w_sum = 0
                 transaction = self.unconfirmed_transactions[i]
                 for wei in transaction["wei"]:
                     temp_w = numpy.array(wei)
+                    w_sum += numpy.abs(temp_w).sum()
                     w.append(temp_w)
                 for base in transaction["b"]:
                     temp_b = numpy.array(base)
                     b.append(temp_b)
                 W.append(w)
+                W_sum.append(w_sum)
                 B.append(b)
+            # make 2 clusters    
+            W_sum = numpy.array(W_sum)
+            centroids, _ = kmeans(W_sum,2)
+            clx, _ = vq(W_sum,centroids)
+
+            if((clx == 0).sum() > (clx == 1).sum()):
+                indices = [i for i, value in enumerate(clx) if value == 0]
+            else:
+                indices = [i for i, value in enumerate(clx) if value == 1]
+            # print(indices)
+
+            # Make new W
+            new_W = []
+            for i in indices:
+                new_W.append(W[i])
+            W = new_W
+
             # averaging
             avg_w = []
             avg_b = []
@@ -181,7 +203,7 @@ class Blockchain:
                 for i in range(len(W[0])):
                     sk = sk + (1 - sp.distance.cdist(W[z][i]/numpy.linalg.norm(W[z][i]), avg_w[i], 'cosine')).sum()
                 score.append(sk)
-            indices = numpy.argsort(-numpy.array(score),kind='mergesort')[:aggr]
+            indices = numpy.argsort(-numpy.array(score),kind='mergesort')[:min(aggr, len(W))]
             print("Score of k ",score)
             # averaging of selected
             new_w = []
@@ -240,7 +262,7 @@ class Blockchain:
         #         wei.append(w.tolist())
         #     for j in new_b:
         #         b.append(j.tolist())
-            # print("Aggregated and Mined")
+        #     print("Aggregated and Mined")
         else:
             return False    # less than k transactions
 

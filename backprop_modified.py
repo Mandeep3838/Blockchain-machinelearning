@@ -1,55 +1,73 @@
 import backprop as bp
-import numpy as np
-import pandas as pd
+import numpy
+import pandas
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import load_breast_cancer
 
+df = pandas.read_csv("data.csv")
+data_full = df[:1100]
+data_test = df[1100:]
 
-df = pd.read_csv('data.csv')
+X_full = data_full.drop('charges', axis=1)
+y_full = numpy.array(data_full['charges'])
+y_full = y_full.reshape((len(y_full), 1))
 
-X = np.array(df.drop('charges', axis=1))
-y = np.array(df['charges'])
-# X, y = load_breast_cancer(return_X_y=True)
-y = y.reshape((len(y), 1))
-print(X.shape)
+X_test = data_test.drop('charges', axis=1)
+y_test = numpy.array(data_test['charges'])
+y_test = y_test.reshape((len(y_test), 1))
 
-# Split Data
-train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.2)
-train_X = train_X.T
-test_X = test_X.T
 
-print(train_X.shape)
-# Normalize
-mean = np.mean(train_X, axis = 1, keepdims=True)
-std_dev = np.std(train_X, axis = 1, keepdims=True)
-train_X = (train_X - mean)/std_dev
-test_X = (test_X - mean)/std_dev
+data_inputs_full = numpy.array(X_full).T
+data_outputs_full = numpy.array(y_full).T
 
-train_y = train_y.T
-test_y = test_y.T
+data_inputs_test = numpy.array(X_test).T
+data_outputs_test = numpy.array(y_test).T
 
-train_X.shape, train_y.shape, test_X.shape, test_y.shape
+
+mean_full = numpy.mean(data_inputs_full, axis=1, keepdims=True)
+std_dev_full = numpy.std(data_inputs_full, axis=1, keepdims=True)
+
+mean_test = numpy.mean(data_inputs_test, axis=1, keepdims=True)
+std_dev_test = numpy.std(data_inputs_test, axis=1, keepdims=True)
+
+
+for i in range(data_inputs_full.shape[0]):
+    if std_dev_full[i] != 0:
+        data_inputs_full[i] = (data_inputs_full[i] - mean_full[i])/std_dev_full[i]
+    else:
+        data_inputs_full[i] = data_inputs_full[i] - mean_full[i]
+
+for i in range(data_inputs_test.shape[0]):
+    if std_dev_test[i] != 0:
+        data_inputs_test[i] = (data_inputs_test[i] - mean_test[i])/std_dev_test[i]
+    else:
+        data_inputs_test[i] = data_inputs_test[i] - mean_test[i]
+
+num_inputs = 12
 
 description = [{"num_nodes" : 12, "activation" : "relu"},
-            #    {"num_nodes" : 12, "activation" : "relu"},
                {"num_nodes" : 1, "activation" : "relu"}]
 
-model = bp.NeuralNetwork(description,12,"mean_squared", train_X, train_y, learning_rate=0.001)
+model = bp.NeuralNetwork(description,num_inputs,"mean_squared", data_inputs_full, data_outputs_full, learning_rate=0.001)
 
-for i in range(len(model.layers)):
-    print(model.layers[i].W)
-    print(model.layers[i].b)
+print(data_inputs_full)
 
-history = model.train(2000)    
+error = model.calc_accuracy(data_inputs_test,data_outputs_test, "RMSE")
+f=open("base_error","a")
+f.write("0" + "," + str(error) + "\n")
+f.close()
 
-plt.plot(history)
-
-acc = model.calc_accuracy(train_X, train_y, "RMSE")
-print("MSE on the training set is = {}".format(acc))
-
-acc = model.calc_accuracy(test_X, test_y,"RMSE")
-print("MSE on the test set is = {}".format(acc))
-
+for i in range(1,51):
+    model.data = data_inputs_full
+    model.labels = data_outputs_full
+    if i == 1:
+        print(model.data)
+    model.train(100)
+    error = model.calc_accuracy(data_inputs_test,data_outputs_test, "RMSE")
+    f=open("base_error","a")
+    f.write(str(i) + "," + str(error) + "\n")
+    f.close()
+    
 
 
