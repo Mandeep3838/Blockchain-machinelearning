@@ -1,15 +1,22 @@
 from hashlib import sha256
-import json
+import json, pickle
+import numpy
+import pandas
+import scipy.spatial as sp
+from scipy.cluster.vq import kmeans, vq
+import random
 import time
 
 from flask import Flask, request
 import requests
+import backprop as bp
 
-
+ 
 class Block:
-    def __init__(self, index, transactions, timestamp, previous_hash, nonce=0):
+    def __init__(self, index, wei, b, timestamp, previous_hash, nonce=0):
         self.index = index
-        self.transactions = transactions
+        self.wei = wei
+        self.b = b
         self.timestamp = timestamp
         self.previous_hash = previous_hash
         self.nonce = nonce
@@ -18,6 +25,9 @@ class Block:
         """
         A function that return the hash of the block contents.
         """
+        # temp = self
+        # temp.wei = self.wei.tolist()
+        # temp.b = self.b.tolist()
         block_string = json.dumps(self.__dict__, sort_keys=True)
         return sha256(block_string.encode()).hexdigest()
 
@@ -36,7 +46,7 @@ class Blockchain:
         the chain. The block has index 0, previous_hash as 0, and
         a valid hash.
         """
-        genesis_block = Block(0, [], 0, "0")
+        genesis_block = Block(0, 0, 0, 0, "0")
         genesis_block.hash = genesis_block.compute_hash()
         self.chain.append(genesis_block)
 
@@ -98,7 +108,7 @@ class Blockchain:
         previous_hash = "0"
 
         for block in chain:
-            block_hash = block.hash
+            block_hash = block["hash"]
             # remove the hash field to recompute the hash again
             # using `compute_hash` method.
             delattr(block, "hash")
@@ -123,8 +133,142 @@ class Blockchain:
 
         last_block = self.last_block
 
+        wei = []
+        b = []
+        k = 8
+        aggr = 5
+
+        # model averaging
+        if len(self.unconfirmed_transactions) == 1:
+            # transaction = self.unconfirmed_transactions[0]
+            # wei = transaction["wei"]
+            # b = transaction["b"]
+            # print("Singly Mined")
+            return False
+
+        elif len(self.unconfirmed_transactions) > k:
+            # nearest aggr aggregation
+
+            W = []
+            W_sum = []
+            B = []
+            for i in range(len(self.unconfirmed_transactions)):
+                w = []
+                b = []
+                w_sum = 0
+                transaction = self.unconfirmed_transactions[i]
+                for wei in transaction["wei"]:
+                    temp_w = numpy.array(wei)
+                    w_sum += numpy.abs(temp_w).sum()
+                    w.append(temp_w)
+                for base in transaction["b"]:
+                    temp_b = numpy.array(base)
+                    b.append(temp_b)
+                W.append(w)
+                W_sum.append(w_sum)
+                B.append(b)
+            # make 2 clusters    
+            W_sum = numpy.array(W_sum)
+            centroids, _ = kmeans(W_sum,2)
+            clx, _ = vq(W_sum,centroids)
+
+            if((clx == 0).sum() > (clx == 1).sum()):
+                indices = [i for i, value in enumerate(clx) if value == 0]
+            else:
+                indices = [i for i, value in enumerate(clx) if value == 1]
+            # print(indices)
+
+            # Make new W
+            new_W = []
+            for i in indices:
+                new_W.append(W[i])
+            W = new_W
+
+            # averaging
+            avg_w = []
+            avg_b = []
+            for i in range(len(W[0])):
+                temp_w = W[0][i]/numpy.linalg.norm(W[0][i])       # normalized
+                temp_b = B[0][i]/numpy.linalg.norm(B[0][i])       # normalized
+                for z in range(1,len(W)):
+                    temp_w = temp_w + W[z][i]/numpy.linalg.norm(W[z][i])           
+                    temp_b = temp_b + B[z][i]/numpy.linalg.norm(B[z][i])
+                temp_w = temp_w/len(self.unconfirmed_transactions)
+                temp_b = temp_b/len(self.unconfirmed_transactions)
+                avg_w.append(temp_w)
+                avg_b.append(temp_b)
+            score = []
+            for z in range(len(W)):
+                sk = 0
+                for i in range(len(W[0])):
+                    sk = sk + (1 - sp.distance.cdist(W[z][i]/numpy.linalg.norm(W[z][i]), avg_w[i], 'cosine')).sum()
+                score.append(sk)
+            indices = numpy.argsort(-numpy.array(score),kind='mergesort')[:min(aggr, len(W))]
+            print("Score of k ",score)
+            # averaging of selected
+            new_w = []
+            new_b = []
+            for i in range(len(W[indices[0]])):
+                temp_w = W[indices[0]][i]
+                temp_b = B[indices[0]][i]
+                for z in range(1,len(indices)):
+                    temp_w = temp_w + W[indices[z]][i]
+                    temp_b = temp_b + B[indices[z]][i]
+                temp_w = temp_w/aggr
+                temp_b = temp_b/aggr
+                new_w.append(temp_w)
+                new_b.append(temp_b)
+            
+            wei = [] # back into list
+            b = []
+            for w in new_w:
+                wei.append(w.tolist())
+            for j in new_b:
+                b.append(j.tolist())
+            print("aggr Aggregated")
+
+        # else: # averaging of all
+        #     W = []
+        #     B = []
+        #     for i in range(len(self.unconfirmed_transactions)):
+        #         w = []
+        #         b = []
+        #         transaction = self.unconfirmed_transactions[i]
+        #         for wei in transaction["wei"]:
+        #             temp_w = numpy.array(wei)
+        #             w.append(temp_w)
+        #         for base in transaction["b"]:
+        #             temp_b = numpy.array(base)
+        #             b.append(temp_b)
+        #         W.append(w)
+        #         B.append(b)
+            
+        #     new_w = []
+        #     new_b = []
+        #     for i in range(len(W[0])):
+        #         temp_w = W[0][i]
+        #         temp_b = B[0][i]
+        #         for z in range(1,len(W)):
+        #             temp_w = temp_w + W[z][i]
+        #             temp_b = temp_b + B[z][i]
+        #         temp_w = temp_w/len(self.unconfirmed_transactions)
+        #         temp_b = temp_b/len(self.unconfirmed_transactions)
+        #         new_w.append(temp_w)
+        #         new_b.append(temp_b)
+            
+        #     wei = [] # back into list
+        #     b = []
+        #     for w in new_w:
+        #         wei.append(w.tolist())
+        #     for j in new_b:
+        #         b.append(j.tolist())
+        #     print("Aggregated and Mined")
+        else:
+            return False    # less than k transactions
+
         new_block = Block(index=last_block.index + 1,
-                          transactions=self.unconfirmed_transactions,
+                          wei=wei,
+                          b=b,
                           timestamp=time.time(),
                           previous_hash=last_block.hash)
 
@@ -145,13 +289,12 @@ blockchain.create_genesis_block()
 # the address to other participating members of the network
 peers = set()
 
-
 # endpoint to submit a new transaction. This will be used by
 # our application to add new data (posts) to the blockchain
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
     tx_data = request.get_json()
-    required_fields = ["author", "content"]
+    required_fields = ["wei", "b"]
 
     for field in required_fields:
         if not tx_data.get(field):
@@ -170,7 +313,7 @@ def new_transaction():
 @app.route('/chain', methods=['GET'])
 def get_chain():
     chain_data = []
-    for block in blockchain.chain:
+    for block in blockchain.chain: 
         chain_data.append(block.__dict__)
     return json.dumps({"length": len(chain_data),
                        "chain": chain_data,
@@ -182,17 +325,19 @@ def get_chain():
 # a command to mine from our application itself.
 @app.route('/mine', methods=['GET'])
 def mine_unconfirmed_transactions():
-    result = blockchain.mine()
-    if not result:
-        return "No transactions to mine"
-    else:
-        # Making sure we have the longest chain before announcing to the network
-        chain_length = len(blockchain.chain)
-        consensus()
-        if chain_length == len(blockchain.chain):
-            # announce the recently mined block to the network
-            announce_new_block(blockchain.last_block)
-        return "Block #{} is mined.".format(blockchain.last_block.index)
+    while(True):
+        result = blockchain.mine()
+        if not result:
+            print("No transactions to mine or Less than k transactions")
+        else:
+            # Making sure we have the longest chain before announcing to the network
+            chain_length = len(blockchain.chain)
+            consensus()
+            if chain_length == len(blockchain.chain):
+                # announce the recently mined block to the network
+                announce_new_block(blockchain.last_block)
+            print("Block #{} is mined.".format(blockchain.last_block.index))
+        time.sleep(random.randint(10,20))
 
 
 # endpoint to add new peers to the network.
@@ -248,7 +393,8 @@ def create_chain_from_dump(chain_dump):
         if idx == 0:
             continue  # skip genesis block
         block = Block(block_data["index"],
-                      block_data["transactions"],
+                      block_data["wei"],
+                      block_data["b"],
                       block_data["timestamp"],
                       block_data["previous_hash"],
                       block_data["nonce"])
@@ -266,7 +412,8 @@ def create_chain_from_dump(chain_dump):
 def verify_and_add_block():
     block_data = request.get_json()
     block = Block(block_data["index"],
-                  block_data["transactions"],
+                  block_data["wei"],
+                  block_data["b"],
                   block_data["timestamp"],
                   block_data["previous_hash"],
                   block_data["nonce"])
@@ -285,7 +432,6 @@ def verify_and_add_block():
 def get_pending_tx():
     return json.dumps(blockchain.unconfirmed_transactions)
 
-
 def consensus():
     """
     Our naive consnsus algorithm. If a longer valid chain is
@@ -295,14 +441,14 @@ def consensus():
 
     longest_chain = None
     current_len = len(blockchain.chain)
-
     for node in peers:
-        response = requests.get('{}/chain'.format(node))
-        length = response.json()['length']
-        chain = response.json()['chain']
-        if length > current_len and blockchain.check_chain_validity(chain):
-            current_len = length
-            longest_chain = chain
+        if node != str(request.host_url)[:-1]:
+            response = requests.get('{}/chain'.format(node))
+            length = response.json()['length']
+            chain = response.json()['chain']
+            if length > current_len and blockchain.check_chain_validity(chain):
+                current_len = length
+                longest_chain = chain
 
     if longest_chain:
         blockchain = longest_chain
@@ -318,11 +464,12 @@ def announce_new_block(block):
     respective chains.
     """
     for peer in peers:
-        url = "{}/add_block".format(peer)
-        headers = {'Content-Type': "application/json"}
-        requests.post(url,
-                      data=json.dumps(block.__dict__, sort_keys=True),
-                      headers=headers)
+        if peer != str(request.host_url)[:-1]:
+            url = "{}/add_block".format(peer)
+            headers = {'Content-Type': "application/json"}
+            requests.post(url,
+                        data=json.dumps(block.__dict__, sort_keys=True),
+                        headers=headers)
 
 # Uncomment this line if you want to specify the port number in the code
 #app.run(debug=True, port=8000)
