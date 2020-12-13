@@ -50,17 +50,16 @@ $ ./clients_script.sh
 
 1. Demo Video
 
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/rPZXPJU3_Cg/0.jpg)](http://www.youtube.com/watch?v=rPZXPJU3_Cg "Federated Learning using Blockchain")
+[![Federated Learning using Blockchain](http://img.youtube.com/vi/rPZXPJU3_Cg/0.jpg)](http://www.youtube.com/watch?v=rPZXPJU3_Cg "Federated Learning using Blockchain")
 
-<!-- ![blockchain-machinelearning.mp4](https://youtu.be/rPZXPJU3_Cg) -->
 
 2. Miner Node
 
-![image.png](https://github.com/satwikkansal/python_blockchain_app/raw/master/screenshots/2.png)
+![miner_chain.png](https://github.com/Mandeep3838/Blockchain-Machinelearning/raw/master/docs/screenshots/miner_chain.png)
 
 3. Client Node
 
-![image.png](https://github.com/satwikkansal/python_blockchain_app/raw/master/screenshots/3.png)
+![client_node.png](Mandeep3838/Blockchain-Machinelearning/raw/master/docs/screenshots/client_node.png)
 
 ## Different Scenarios 
 
