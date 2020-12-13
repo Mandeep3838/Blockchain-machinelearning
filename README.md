@@ -50,7 +50,8 @@ $ ./clients_script.sh
 
 1. Demo Video
 
-![blockchain-machinelearning.mp4](https://github.com/Mandeep3838/Blockchain-machinelearning/raw/master/docs/blockchain-machinelearning.mp4)
+<iframe width="560" height="315" src="https://youtu.be/rPZXPJU3_Cg">
+<!-- ![blockchain-machinelearning.mp4](https://youtu.be/rPZXPJU3_Cg) -->
 
 2. Miner Node
 
