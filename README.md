@@ -59,7 +59,7 @@ $ ./clients_script.sh
 
 3. Client Node
 
-![client_node.png](Mandeep3838/Blockchain-Machinelearning/raw/master/docs/screenshots/client_node.png)
+![client_node.png](https://github.com/Mandeep3838/Blockchain-Machinelearning/raw/master/docs/screenshots/client_node.png)
 
 ## Different Scenarios 
 
