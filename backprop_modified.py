@@ -54,19 +54,19 @@ model = bp.NeuralNetwork(description,num_inputs,"mean_squared", data_inputs_full
 print(data_inputs_full)
 
 error = model.calc_accuracy(data_inputs_test,data_outputs_test, "RMSE")
-f=open("base_error","a")
+f=open("base_error.csv","a")
 f.write("0" + "," + str(error) + "\n")
 f.close()
 
-for i in range(1,51):
+for j in range(1,51):
     model.data = data_inputs_full
     model.labels = data_outputs_full
-    if i == 1:
-        print(model.data)
     model.train(100)
+    for i in range(len(model.layers)):
+        model.layers[i].W = model.layers[i].W + numpy.random.normal(0, 1, model.layers[i].W.shape)
     error = model.calc_accuracy(data_inputs_test,data_outputs_test, "RMSE")
-    f=open("base_error","a")
-    f.write(str(i) + "," + str(error) + "\n")
+    f=open("base_error.csv","a")
+    f.write(str(j) + "," + str(error) + "\n")
     f.close()
     
 
