@@ -1,4 +1,4 @@
-# python_secure_decentralized_learning_app
+# Python Secure Decentralized Learning App
 
 A Blockchain application with federated learning using neural networks.
 
@@ -29,26 +29,24 @@ $ pip install -r requirements.txt
 Start a blockchain-federated learning model,
 
 ```sh
-# Windows users can follow this: https://flask.palletsprojects.com/en/1.1.x/cli/#application-discovery
 $ chmod 777 miner_script.sh clients_script.sh kill_sessions.sh
 $ ./miner_script.sh
+```
+On a different Terminal
+```sh
 $ ./clients_script.sh
 ```
+## After this step
 
-## Two instances of blockchain node are now up and running at port 8000,8001.
-## 11 client nodes are running on ports {5000,5001,...,5010}
-## 1 Testing node is running on port 9000
+* Two instances of blockchain node are now up and running on port 8000,8001.
+* Client nodes are running on ports {5000,5001,...,5010}
+* Testing node is running on port 9000
+* You can check results on the firefox browser
+* Error files for each client and test node are saved in the working directory as blocks are added.
+* For checking chain, refresh http://127.0.0.1:8000/chain
 
 
-Run the application on a different terminal session,
-
-```sh
-$ python run_app.py
-```
-
-The application should be up and running at [http://localhost:5000](http://localhost:5000).
-
-Here are a few screenshots
+## Working Video
 
 1. Posting some content
 
@@ -62,7 +60,7 @@ Here are a few screenshots
 
 ![image.png](https://github.com/satwikkansal/python_blockchain_app/raw/master/screenshots/3.png)
 
-To play around by spinning off multiple custom nodes, use the `register_with/` endpoint to register a new node. 
+Default app takes two client nodes as malicious, you can increase the maliciousness by changing **z** variable in the clients_script.sh
 
 Here's a sample scenario that you might wanna try,
 
