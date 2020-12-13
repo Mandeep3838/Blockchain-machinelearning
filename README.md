@@ -73,9 +73,11 @@ $ ./clients_script.sh
     * Add new peer in the peers array.
     * Replace 5010 by 50yy, 8001 by 80xx
     * Modify start and end variable, as the share of data available to each client from 1100 rows.
+  * In kill_session Script
+    * Replace 5010 by 50yy, 8001 by 80xx
   * Run the bash script
 
 ## Documentation of Code
 
-Present in the [docs]() directory
+Present in the [docs](https://github.com/Mandeep3838/Blockchain-Machinelearning/raw/master/docs/) directory
 

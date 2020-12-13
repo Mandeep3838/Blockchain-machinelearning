@@ -1,0 +1,33 @@
+|-- app
+|   |-- templates
+|   |       |-- base.html
+|   |       |-- index.html
+|   |-- __init__.py
+|   |-- backprop.py
+|   |-- data.csv
+|   |-- views.py
+|
+|-- data_collected_for_visualization
+|-- docs
+|   |-- code_structure.txt
+|   |-- screenshots
+|   |       |-- client_node.png
+|   |       |-- miner_chain.png
+|   |-- Blockchain-Machinelearning.mp4
+|   |-- file_details.txt
+|
+|-- README.md
+|-- backprop.py
+|-- backprop_test.py
+|-- client_script.sh
+|-- clients_script_11clients_2miners.sh
+|-- data.csv
+|-- kill_sessions.sh
+|-- kill_sessions_11clients_2miners.sh
+|-- miner_script.sh
+|-- miner_script_11clients_2miners.sh
+|-- node_server.py
+|-- requirements.txt
+|-- run_app.py
+|-- test_error.py
+|-- working.txt
