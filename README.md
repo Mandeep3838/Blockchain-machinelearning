@@ -1,23 +1,28 @@
-# python_blockchain_app
+# python_secure_decentralized_learning_app
 
-A simple tutorial for developing a blockchain application from scratch in Python.
+A Blockchain application with federated learning using neural networks.
 
 ## What is blockchain? How it is implemented? And how it works?
 
 Please read the [step-by-step implementation tutorial](https://www.ibm.com/developerworks/cloud/library/cl-develop-blockchain-app-in-python/index.html) to get your answers :)
+
+## What are neural networks? And how it works?
+
+Please read the [step-by-step tutorial](https://www.tutorialspoint.com/artificial_neural_network/index.htm) to get your answers :)
+
 
 ## Instructions to run
 
 Clone the project,
 
 ```sh
-$ git clone https://github.com/satwikkansal/python_blockchain_app.git
+$ git clone https://github.com/Mandeep3838/Blockchain-machinelearning.git
 ```
 
 Install the dependencies,
 
 ```sh
-$ cd python_blockchain_app
+$ cd Blockchain-machinelearning
 $ pip install -r requirements.txt
 ```
 
