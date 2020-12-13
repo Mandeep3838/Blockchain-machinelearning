@@ -87,7 +87,7 @@ def fetch_posts():
         if(not found):
             posts.append(content)
             # write to file
-            f = open("error_file" + str(file_name) + ".csv","a")
+            f = open("9000_error_test" + str(file_name) + ".csv","a")
             f.write(str(last_block["index"]) + "," + str(error_full) + '\n')
             f.close()
         posts = sorted(posts, key=lambda k: k['timestamp'],
