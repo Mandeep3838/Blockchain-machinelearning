@@ -50,7 +50,8 @@ $ ./clients_script.sh
 
 1. Demo Video
 
-<iframe width="560" height="315" src="https://youtu.be/rPZXPJU3_Cg">
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/rPZXPJU3_Cg/0.jpg)](http://www.youtube.com/watch?v=rPZXPJU3_Cg "Federated Learning using Blockchain")
+
 <!-- ![blockchain-machinelearning.mp4](https://youtu.be/rPZXPJU3_Cg) -->
 
 2. Miner Node
