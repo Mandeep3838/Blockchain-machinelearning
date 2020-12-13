@@ -26,15 +26,18 @@ $ cd Blockchain-machinelearning
 $ pip install -r requirements.txt
 ```
 
-Start a blockchain node server,
+Start a blockchain-federated learning model,
 
 ```sh
 # Windows users can follow this: https://flask.palletsprojects.com/en/1.1.x/cli/#application-discovery
-$ export FLASK_APP=node_server.py
-$ flask run --port 8000
+$ chmod 777 miner_script.sh clients_script.sh kill_sessions.sh
+$ ./miner_script.sh
+$ ./clients_script.sh
 ```
 
-One instance of our blockchain node is now up and running at port 8000.
+## Two instances of blockchain node are now up and running at port 8000,8001.
+## 11 client nodes are running on ports {5000,5001,...,5010}
+## 1 Testing node is running on port 9000
 
 
 Run the application on a different terminal session,

@@ -44,7 +44,7 @@ echo "Starting Test node"
 # testing node
 
 export PEER="http://127.0.0.1:8000"
-export ERROR_FILE="0"  
+export ERROR_FILE="9000"  
 export FLASK_APP=test_error.py
 flask run --port 9000 &
 sleep 5
