@@ -50,7 +50,7 @@ $ ./clients_script.sh
 
 1. Demo Video
 
-![image.png](https://github.com/satwikkansal/python_blockchain_app/raw/master/screenshots/1.png)
+![blockchain-machinelearning.mp4](https://github.com/Mandeep3838/Blockchain-machinelearning/raw/master/docs/blockchain-machinelearning.mp4)
 
 2. Miner Node
 
