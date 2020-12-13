@@ -23,7 +23,7 @@ Code Present in node_server.py.
     * Function to compute Sha-256 hash
 
 ### Endpoints
-* new_transaction() - Accept transaction from client and save in unconfirmed transaactions
+* new_transaction() - Accept transaction from client and save in unconfirmed transactions
 * chain() - Send the current chain.
 * mine() - Start mining at this node.
 * register_new_peers() - Link with other miners in the network.
